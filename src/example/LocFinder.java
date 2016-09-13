@@ -12,6 +12,7 @@ import org.pi4.locutil.trace.*;
  */
 public class LocFinder
 {
+    final static boolean ERROR_MODE = false;
 
     /**
      * Execute example
@@ -41,39 +42,48 @@ public class LocFinder
             // Generate traces from parsed files
             tg.generate();
             
-            
-            /* TEMP CODE */
-            /* List<TraceEntry> onlineTrace = tg.getOnline();
-            //TraceEntry random = onlineTrace.get((int)(Math.random()*onlineTrace.size()));
 
-            int total = 0;
-            int errors = 0;
-            double errorMargin = 2;
+            List<TraceEntry> onlineTrace = tg.getOnline();
             
-            double averageLength = 0;
+            if(ERROR_MODE) // <- #if where art thou.
+            {
+                int total = 0;
+                int errors = 0;
+                double errorMargin = 2;
+                
+                double averageLength = 0;
+                
+                for (TraceEntry target : onlineTrace)
+                {
+                    GeoPosition estimate = findPositionOfTraceKNNSS(target, tg.getOffline(), 3);
+                    double oDist = calculateError(target.getGeoPosition(), estimate);
+                    
+                    averageLength += oDist;
+                    
+                    if (oDist > errorMargin)
+                    {
+                        errors++;
+                    }
+                    
+                    total++;
+                }
+                averageLength /= total;
+                
+                System.out.println(averageLength);
+                System.out.println(errors + "/" + total);    
+            }
+            
+            PrintWriter writer = new PrintWriter("empirical_FP_NN", "UTF-8");
+            writer.println("estimated pos,true pos");
             
             for (TraceEntry target : onlineTrace)
             {
-                GeoPosition estimate = findPositionOfTraceKNNSS(tg, target, 3);
-                //double cDist = calculateError(target.getGeoPosition(), getCheatPos(tg, target));
-                double oDist = calculateError(target.getGeoPosition(), estimate);
-                //System.out.println(target.getGeoPosition() + ", " + estimate + ", " + oDist + ", " + cDist);
-                
-                averageLength += oDist;
-                
-                if (oDist > errorMargin)
-                {
-                    errors++;
-                }
-                
-                total++;
+                GeoPosition estimate = findPositionOfTraceKNNSS(target, tg.getOffline(), 1);
+                writer.print(estimate.toString());
+                writer.print(',');
+                writer.println(target.getGeoPosition());
             }
-            averageLength /= total;
-            
-            System.out.println(averageLength);
-            System.out.println(errors + "/" + total); */
-            /* END OF TEMP CODE */
-            
+            writer.close();
         } 
         catch (NumberFormatException e)
         {
@@ -94,14 +104,14 @@ public class LocFinder
      * @param targetEntry
      * @throws Exception 
      */
-    private static GeoPosition findPositionOfTraceKNNSS(TraceGenerator tg, TraceEntry targetEntry, int kVal) throws Exception
+    private static GeoPosition findPositionOfTraceKNNSS(TraceEntry targetEntry, List<TraceEntry> offlineTraces, int kVal) throws Exception
     {
-        if (tg == null)
+        if (offlineTraces == null)
         {
-            throw new Exception("Trace generator was not initialized");
+            throw new Exception("offline traces were not instantiated");
         }
         
-        if (tg.getOfflineSetSize() < 1)
+        if (offlineTraces.size() < 1)
         {
             throw new Exception("offline set was too small");
         }
@@ -115,8 +125,7 @@ public class LocFinder
 
         HashMap<GeoPosition, List<SignalStrengthSamples>> uniqueOfflineSamples = new HashMap<GeoPosition, List<SignalStrengthSamples>>();
 
-        List<TraceEntry> offlineTrace = tg.getOffline();
-        for (TraceEntry trace : offlineTrace)
+        for (TraceEntry trace : offlineTraces)
         {
             if (!uniqueOfflineSamples.containsKey(trace.getGeoPosition()))
             {
