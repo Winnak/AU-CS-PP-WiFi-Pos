@@ -80,9 +80,8 @@ public class LocFinder
             	}
             }
             
-            //Eriks del
             
-
+            //Eriks del
             List<TraceEntry> onlineTrace = tg.getOnline();
             
             if(ERROR_MODE) // <- #if where art thou.
