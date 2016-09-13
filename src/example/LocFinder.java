@@ -4,38 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.pi4.locutil.*;
 import org.pi4.locutil.io.*;
 import org.pi4.locutil.trace.*;
-//import org.pi4.locutil.MACAddress;
-//import org.pi4.locutil.io.TraceGenerator;
-//import org.pi4.locutil.trace.*;
-
-class MyEntry
-{
-    public GeoPosition Position;
-    public MACAddress Address;
-    public List<Double> SignalStrengths;
-    
-    public int hashCode()
-    {
-        return Position.hashCode();
-    }
-}
-
 
 /**
- * Example of how to use LocUtil
- * 
  * @author hoyjor
  */
 public class LocFinder
@@ -100,23 +77,6 @@ public class LocFinder
             
             System.out.println(averageLength);
             System.out.println(errors + "/" + total);
-            /*
-            System.out.println(random);
-            GeoPosition shortest = findPositionOfTrace(tg, random);
-
-            GeoPosition cheatShort = getCheatPos(tg, random);
-
-            System.out.println();            
-            System.out.println(calculateError(random.getGeoPosition(), cheatShort));
-            System.out.println("Cheating Position: " + cheatShort);
-            
-            System.out.println();            
-            System.out.println(calculateError(random.getGeoPosition(), shortest));
-            
-
-            System.out.println("True Position: " + random.getGeoPosition());
-            System.out.println("Shortest position: " + shortest);
-            */
         } 
         catch (NumberFormatException e)
         {
@@ -137,7 +97,7 @@ public class LocFinder
      * @param tEntry
      * @return the closest offline point to the trace entry
      */
-    private static GeoPosition getCheatPos(TraceGenerator tg, TraceEntry tEntry)
+/*    private static GeoPosition getCheatPos(TraceGenerator tg, TraceEntry tEntry)
     {
         GeoPosition cheatShort = new GeoPosition(666, 666, 666, 66);
         double cheatDist = 100000000;
@@ -152,7 +112,8 @@ public class LocFinder
         }
         return cheatShort;
     }
-
+*/
+    
     /**
      * @param tg
      * @param targetEntry
