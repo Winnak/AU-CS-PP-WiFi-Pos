@@ -21,6 +21,14 @@ public class LocFinder
      */
     public static void main(String[] args)
     {
+    	String accessPointPath = "data/MU.AP__170012_1.positions";
+    	File accessPointFile = new File(accessPointPath);
+    	ArrayList<AccessPoint> list = parseAccessPointFile(accessPointFile);
+    	for (AccessPoint ap : list)
+    	{
+    		System.out.println(ap);
+    	}
+    	
         String offlinePath = "data/MU.1.5meters.offline.trace";
         String onlinePath = "data/MU.1.5meters.online.trace";
 
@@ -38,9 +46,41 @@ public class LocFinder
             int offlineSize = 25;
             int onlineSize = 5;
             tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
-
+                                
             // Generate traces from parsed files
             tg.generate();
+            
+            // Michaels del
+
+            List<TraceEntry> offlineTrace = tg.getOffline();
+            List<TraceEntry> newTraces = new ArrayList<TraceEntry>();
+            HashSet<GeoPosition> hsGP = new HashSet<GeoPosition>();
+            
+            for (TraceEntry target : offlineTrace)
+            {
+            	if (hsGP.add(target.getGeoPosition()))
+            	{
+            		TraceEntry te = TraceEntry.fromString("t=" + target.getTimestamp() +
+            				";pos=" + target.getGeoPosition().getX() + "," + target.getGeoPosition().getY() + "," + target.getGeoPosition().getZ() +
+            				";id=" + target.getId() +
+            				";" + list.get(0).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(0).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(1).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(1).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(2).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(2).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(3).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(3).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(4).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(4).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(5).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(5).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(6).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(6).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(7).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(7).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(8).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(8).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(9).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(9).position))) + ",2.412E9,3,-96" +
+            				";" + list.get(10).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(10).position))) + ",2.412E9,3,-96");
+            		newTraces.add(te);
+            		System.out.println(te);
+            		System.out.println(target);
+            	}
+            }
+            
+            //Eriks del
             
 
             List<TraceEntry> onlineTrace = tg.getOnline();
@@ -99,6 +139,48 @@ public class LocFinder
         }
     }
     
+    public static ArrayList<AccessPoint> parseAccessPointFile(File accessPointFile)
+    {
+    	ArrayList<AccessPoint> list = new ArrayList<AccessPoint>();
+		
+		BufferedReader in;
+		try 
+		{
+			in = new BufferedReader(new FileReader(accessPointFile));
+
+			String line;
+			
+			try 
+			{
+				while ((line = in.readLine()) != null) 
+				{
+					AccessPoint ap = AccessPoint.Parse(line);
+					if (ap != null)
+					{
+						list.add(ap);
+					}
+				}
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				in.close();
+			}
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		return list;
+    }
+
     /**
      * @param tg
      * @param targetEntry
