@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.pi4.locutil.*;
 import org.pi4.locutil.io.*;
@@ -52,11 +54,11 @@ public class LocFinder
         // Construct parsers
         File offlineFile = new File(offlinePath);
         Parser offlineParser = new Parser(offlineFile);
-        System.out.println("Offline File: " + offlineFile.getAbsoluteFile());
+        //System.out.println("Offline File: " + offlineFile.getAbsoluteFile());
 
         File onlineFile = new File(onlinePath);
         Parser onlineParser = new Parser(onlineFile);
-        System.out.println("Online File: " + onlineFile.getAbsoluteFile());
+        //System.out.println("Online File: " + onlineFile.getAbsoluteFile());
 
         // Construct trace generator
         TraceGenerator tg;
@@ -74,13 +76,13 @@ public class LocFinder
 
             int total = 0;
             int errors = 0;
-            double errorMargin = 1;
+            double errorMargin = 2;
             
             double averageLength = 0;
             
             for (TraceEntry target : onlineTrace)
             {
-                GeoPosition estimate = findPositionOfTrace(tg, target);
+                GeoPosition estimate = findPositionOfTraceKNNSS(tg, target, 3);
                 //double cDist = calculateError(target.getGeoPosition(), getCheatPos(tg, target));
                 double oDist = calculateError(target.getGeoPosition(), estimate);
                 //System.out.println(target.getGeoPosition() + ", " + estimate + ", " + oDist + ", " + cDist);
@@ -123,6 +125,10 @@ public class LocFinder
         catch (IOException e)
         {
             e.printStackTrace();
+        } 
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -150,11 +156,26 @@ public class LocFinder
     /**
      * @param tg
      * @param targetEntry
+     * @throws Exception 
      */
-    private static GeoPosition findPositionOfTrace(TraceGenerator tg, TraceEntry targetEntry)
+    private static GeoPosition findPositionOfTraceKNNSS(TraceGenerator tg, TraceEntry targetEntry, int kVal) throws Exception
     {
-        SignalStrengthSamples M = targetEntry.getSignalStrengthSamples();
+        if (tg == null)
+        {
+            throw new Exception("Trace generator was not initialized");
+        }
         
+        if (tg.getOfflineSetSize() < 1)
+        {
+            throw new Exception("offline set was too small");
+        }
+        
+        if (kVal < 1)
+        {
+            throw new Exception("K-value cannot be less than 1");
+        }
+        
+        SignalStrengthSamples M = targetEntry.getSignalStrengthSamples();
 
         HashMap<GeoPosition, List<SignalStrengthSamples>> entries = new HashMap<GeoPosition, List<SignalStrengthSamples>>();
 
@@ -174,24 +195,60 @@ public class LocFinder
         }
         
         
-        GeoPosition shortest = new GeoPosition(666,666,666,66);
-        double currentShortest = 100000000;
+        LinkedList<Tuple<GeoPosition, Double>> nearby = new LinkedList<>();
+        
         for (Entry<GeoPosition, List<SignalStrengthSamples>> entry : entries.entrySet())
         {
             double distance = getEuclidAveragePosition(M, entry.getValue());
-            if (distance < currentShortest)
+            /*if (distance < currentShortest)
             {
                 currentShortest = distance;
                 shortest = entry.getKey();
+            }*/
+            
+            
+            // 7 -> [6, 10, 16] (kVal = 3), checks 6, check 10, inserts at that spot, removes the last excess.
+            for (int i = 0; i < kVal; i++)
+            {
+                if (i < nearby.size())
+                {
+                    Tuple<GeoPosition, Double> current = nearby.get(i);
+
+                    if (distance < current.Item2)
+                    {
+                        nearby.add(i, new Tuple<GeoPosition, Double>(entry.getKey(), distance));
+                        if (nearby.size() > kVal)
+                        {
+                            nearby.removeLast();
+                        }
+                        break;
+                    }
+                }
+                else 
+                {
+                    nearby.addLast(new Tuple<GeoPosition, Double>(entry.getKey(), distance));
+                    break;
+                }
             }
         }
         
-        return shortest;
+        double x = 0, y = 0, z = 0;
+        for (Tuple<GeoPosition, Double> closePos : nearby)
+        {
+            x += closePos.Item1.getX();
+            y += closePos.Item1.getY();
+            z += closePos.Item1.getZ();
+        }
+        x /= nearby.size();
+        y /= nearby.size();
+        z /= nearby.size();
+        
+        return new GeoPosition(x, y, z);
     }
 
-    private static double calculateError(GeoPosition a, GeoPosition b)
+    private static double calculateError(GeoPosition groundTruth, GeoPosition estimate)
     {
-        return a.distance(b);
+        return groundTruth.distance(estimate);
     }
 
     private static double getEuclidAveragePosition(SignalStrengthSamples M, List<SignalStrengthSamples> values)
