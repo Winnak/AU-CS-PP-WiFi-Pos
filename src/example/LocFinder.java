@@ -1,16 +1,7 @@
 package example;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 import java.util.Map.Entry;
 import org.pi4.locutil.*;
 import org.pi4.locutil.io.*;
@@ -43,11 +34,9 @@ public class LocFinder
         // Construct parsers
         File offlineFile = new File(offlinePath);
         Parser offlineParser = new Parser(offlineFile);
-        //System.out.println("Offline File: " + offlineFile.getAbsoluteFile());
 
         File onlineFile = new File(onlinePath);
         Parser onlineParser = new Parser(onlineFile);
-        //System.out.println("Online File: " + onlineFile.getAbsoluteFile());
 
         // Construct trace generator
         TraceGenerator tg;
@@ -92,7 +81,9 @@ public class LocFinder
             
             //Eriks del
             
-            List<TraceEntry> onlineTrace = tg.getOnline();
+            
+            /* TEMP CODE */
+            /* List<TraceEntry> onlineTrace = tg.getOnline();
             //TraceEntry random = onlineTrace.get((int)(Math.random()*onlineTrace.size()));
 
             int total = 0;
@@ -120,7 +111,9 @@ public class LocFinder
             averageLength /= total;
             
             System.out.println(averageLength);
-            System.out.println(errors + "/" + total);
+            System.out.println(errors + "/" + total); */
+            /* END OF TEMP CODE */
+            
         } 
         catch (NumberFormatException e)
         {
@@ -180,28 +173,6 @@ public class LocFinder
 
     /**
      * @param tg
-     * @param tEntry
-     * @return the closest offline point to the trace entry
-     */
-/*    private static GeoPosition getCheatPos(TraceGenerator tg, TraceEntry tEntry)
-    {
-        GeoPosition cheatShort = new GeoPosition(666, 666, 666, 66);
-        double cheatDist = 100000000;
-        for (TraceEntry entry : tg.getOffline())
-        {
-            double thisDist = calculateError(tEntry.getGeoPosition(), entry.getGeoPosition());
-            if (thisDist < cheatDist)
-            {
-                cheatDist = thisDist;
-                cheatShort = entry.getGeoPosition();
-            }
-        }
-        return cheatShort;
-    }
-*/
-    
-    /**
-     * @param tg
      * @param targetEntry
      * @throws Exception 
      */
@@ -222,37 +193,65 @@ public class LocFinder
             throw new Exception("K-value cannot be less than 1");
         }
         
-        SignalStrengthSamples M = targetEntry.getSignalStrengthSamples();
+        SignalStrengthSamples targetSignalStrength = targetEntry.getSignalStrengthSamples();
 
-        HashMap<GeoPosition, List<SignalStrengthSamples>> entries = new HashMap<GeoPosition, List<SignalStrengthSamples>>();
+        HashMap<GeoPosition, List<SignalStrengthSamples>> uniqueOfflineSamples = new HashMap<GeoPosition, List<SignalStrengthSamples>>();
 
         List<TraceEntry> offlineTrace = tg.getOffline();
         for (TraceEntry trace : offlineTrace)
         {
-            if (!entries.containsKey(trace.getGeoPosition()))
+            if (!uniqueOfflineSamples.containsKey(trace.getGeoPosition()))
             {
                 List<SignalStrengthSamples> values = new ArrayList<SignalStrengthSamples>();
                 values.add(trace.getSignalStrengthSamples());
-                entries.put(trace.getGeoPosition(), values);
+                uniqueOfflineSamples.put(trace.getGeoPosition(), values);
             }
             else
             {
-                entries.get(trace.getGeoPosition()).add(trace.getSignalStrengthSamples());
+                uniqueOfflineSamples.get(trace.getGeoPosition()).add(trace.getSignalStrengthSamples());
             }
         }
         
         
+        LinkedList<Tuple<GeoPosition, Double>> nearby = findNearestNeighbors(kVal, targetSignalStrength, uniqueOfflineSamples);
+        
+        return averageNeighbors(nearby);
+    }
+
+    /**
+     * @param nearby
+     * @return
+     */
+    private static GeoPosition averageNeighbors(LinkedList<Tuple<GeoPosition, Double>> nearby)
+    {
+        double x = 0, y = 0, z = 0;
+        for (Tuple<GeoPosition, Double> closePos : nearby)
+        {
+            x += closePos.Item1.getX();
+            y += closePos.Item1.getY();
+            z += closePos.Item1.getZ();
+        }
+        x /= nearby.size();
+        y /= nearby.size();
+        z /= nearby.size();
+        
+        return new GeoPosition(x, y, z);
+    }
+
+    /**
+     * @param kVal
+     * @param currentSignature
+     * @param offlineSamples
+     * @return
+     */
+    private static LinkedList<Tuple<GeoPosition, Double>> findNearestNeighbors(int kVal,
+            SignalStrengthSamples currentSignature, HashMap<GeoPosition, List<SignalStrengthSamples>> offlineSamples)
+    {
         LinkedList<Tuple<GeoPosition, Double>> nearby = new LinkedList<>();
         
-        for (Entry<GeoPosition, List<SignalStrengthSamples>> entry : entries.entrySet())
+        for (Entry<GeoPosition, List<SignalStrengthSamples>> entry : offlineSamples.entrySet())
         {
-            double distance = getEuclidAveragePosition(M, entry.getValue());
-            /*if (distance < currentShortest)
-            {
-                currentShortest = distance;
-                shortest = entry.getKey();
-            }*/
-            
+            double distance = getEuclidAveragePosition(currentSignature, entry.getValue());
             
             // 7 -> [6, 10, 16] (kVal = 3), checks 6, check 10, inserts at that spot, removes the last excess.
             for (int i = 0; i < kVal; i++)
@@ -278,19 +277,7 @@ public class LocFinder
                 }
             }
         }
-        
-        double x = 0, y = 0, z = 0;
-        for (Tuple<GeoPosition, Double> closePos : nearby)
-        {
-            x += closePos.Item1.getX();
-            y += closePos.Item1.getY();
-            z += closePos.Item1.getZ();
-        }
-        x /= nearby.size();
-        y /= nearby.size();
-        z /= nearby.size();
-        
-        return new GeoPosition(x, y, z);
+        return nearby;
     }
 
     private static double calculateError(GeoPosition groundTruth, GeoPosition estimate)
@@ -298,7 +285,7 @@ public class LocFinder
         return groundTruth.distance(estimate);
     }
 
-    private static double getEuclidAveragePosition(SignalStrengthSamples M, List<SignalStrengthSamples> values)
+    private static double getEuclidAveragePosition(SignalStrengthSamples targetSignalStrengths, List<SignalStrengthSamples> values)
     {
         Map<MACAddress, Tuple<Double, Integer>> totalPerAddress = new HashMap<MACAddress, Tuple<Double, Integer>>();
         for (SignalStrengthSamples samples : values)
@@ -329,7 +316,7 @@ public class LocFinder
         final double kMissingPenalty = -100;
         
         double result = 0;
-        for (MACAddress hotspot : M.getSortedAccessPoints())
+        for (MACAddress hotspot : targetSignalStrengths.getSortedAccessPoints())
         {
             /* Another approach, instead of having a kMissingPenalty, though not as good.
             if(M.getAverageSignalStrength(hotspot) > -30)
@@ -340,12 +327,12 @@ public class LocFinder
             
             if (averagePerAddress.containsKey(hotspot))
             {
-                double difference = (M.getAverageSignalStrength(hotspot) - averagePerAddress.get(hotspot));
+                double difference = (targetSignalStrengths.getAverageSignalStrength(hotspot) - averagePerAddress.get(hotspot));
                 result += difference * difference;
             }
             else
             {
-                double difference = (M.getAverageSignalStrength(hotspot) - kMissingPenalty);
+                double difference = (targetSignalStrengths.getAverageSignalStrength(hotspot) - kMissingPenalty);
                 result += difference * difference;   
             }
         }
