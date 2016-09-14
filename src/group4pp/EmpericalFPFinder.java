@@ -17,6 +17,8 @@ public class EmpericalFPFinder
 
     public static void main(String[] args)
     {
+        String outputDir = "bin/output/empirical_FP_NN";
+        
         String offlinePath = "data/MU.1.5meters.offline.trace";
         String onlinePath = "data/MU.1.5meters.online.trace";
 
@@ -70,14 +72,14 @@ public class EmpericalFPFinder
             }
             else
             {                
-                PrintWriter writer = new PrintWriter("empirical_FP_NN", "UTF-8");
-                writer.println("estimated pos,true pos");
+                PrintWriter writer = new PrintWriter(outputDir, "UTF-8");
+                writer.println("estimated pos;true pos");
                 
                 for (TraceEntry target : onlineTrace)
                 {
                     GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, offlineTrace, 1);
                     writer.print(estimate.toString());
-                    writer.print(',');
+                    writer.print(';');
                     writer.println(target.getGeoPosition());
                 }
                 writer.close();

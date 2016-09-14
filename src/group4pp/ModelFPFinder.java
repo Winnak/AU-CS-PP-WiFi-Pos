@@ -23,6 +23,8 @@ public class ModelFPFinder
      */
     public static void main(String[] args)
     {
+        String outputDir = "bin/output/model_FP_NN";
+        
     	String accessPointPath = "data/MU.AP__170012_1.positions";
     	File accessPointFile = new File(accessPointPath);
     	ArrayList<AccessPoint> list = parseAccessPointFile(accessPointFile);
@@ -88,7 +90,7 @@ public class ModelFPFinder
                 	System.out.println(target);
             	}
             }
-            PrintWriter writerModel = new PrintWriter("model_FP_NN", "UTF-8");
+            PrintWriter writerModel = new PrintWriter(outputDir, "UTF-8");
             writerModel.println("estimated pos,true pos");
             for (TraceEntry target : onlineTrace)
             {
@@ -101,7 +103,7 @@ public class ModelFPFinder
             
             for	(int i = 0; i < ssD.size(); i++)
             {
-	            PrintWriter writerModelGraph = new PrintWriter("model_FP_NN" + (i + 1), "UTF-8");
+	            PrintWriter writerModelGraph = new PrintWriter(outputDir + (i + 1), "UTF-8");
 	            writerModelGraph.println("SS, d");
 	            for (String target : ssD.get(i))
 	            {
