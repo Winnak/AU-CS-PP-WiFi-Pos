@@ -13,11 +13,9 @@ import org.pi4.locutil.trace.*;
  */
 public class EmpericalFPFinder
 {
-    final static boolean ERROR_MODE = false;
-
     public static void main(String[] args)
     {
-        final String outputDir = "bin/output/empirical_FP_NN";
+        final String outputDir = "bin/output/empirical_FP_KNN";
         
         final String offlinePath = "data/MU.1.5meters.offline.trace";
         final String onlinePath = "data/MU.1.5meters.online.trace";
@@ -43,41 +41,15 @@ public class EmpericalFPFinder
             List<TraceEntry> onlineTrace = tg.getOnline();
             List<TraceEntry> offlineTrace = tg.getOffline();
             
-            if(ERROR_MODE) // <- #if where art thou.
-            {
-                int total = 0;
-                int errors = 0;
-                final double errorMargin = 2;
-                
-                double averageLength = 0;
-                
-                for (TraceEntry target : onlineTrace)
-                {
-                    GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, offlineTrace, 3);
-                    double oDist = calculateError(target.getGeoPosition(), estimate);
-                    
-                    averageLength += oDist;
-                    
-                    if (oDist > errorMargin)
-                    {
-                        errors++;
-                    }
-                    
-                    total++;
-                }
-                averageLength /= total;
-                
-                System.out.println(averageLength);
-                System.out.println(errors + "/" + total);  
-            }
-            else
-            {                
-                PrintWriter writer = new PrintWriter(outputDir, "UTF-8");
+          
+            for (int k = 1; k <= 5; k++)
+            {                    
+                PrintWriter writer = new PrintWriter(outputDir + k + ".csv", "UTF-8");
                 writer.println("estimated pos;true pos");
                 
                 for (TraceEntry target : onlineTrace)
                 {
-                    GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, offlineTrace, 1);
+                    GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, offlineTrace, k);
                     writer.print(estimate.toString());
                     writer.print(';');
                     writer.println(target.getGeoPosition());
@@ -91,9 +63,4 @@ public class EmpericalFPFinder
         }
     }
     
-
-    private static double calculateError(GeoPosition groundTruth, GeoPosition estimate)
-    {
-        return groundTruth.distance(estimate);
-    }
 }
