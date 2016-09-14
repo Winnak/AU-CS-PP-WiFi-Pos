@@ -25,7 +25,7 @@ public class ModelFPFinder
     {
     	String accessPointPath = "data/MU.AP__170012_1.positions";
     	File accessPointFile = new File(accessPointPath);
-    	ArrayList<AccessPoint> list = parseAccessPointFile(accessPointFile);
+    	ArrayList<AccessPoint> list = LocUtility.parseAccessPointFile(accessPointFile);
     	for (AccessPoint ap : list)
     	{
     		System.out.println(ap);
@@ -117,46 +117,4 @@ public class ModelFPFinder
         }
     }
 
-    
-    public static ArrayList<AccessPoint> parseAccessPointFile(File accessPointFile)
-    {
-    	ArrayList<AccessPoint> list = new ArrayList<AccessPoint>();
-		
-		BufferedReader in;
-		try 
-		{
-			in = new BufferedReader(new FileReader(accessPointFile));
-
-			String line;
-			
-			try 
-			{
-				while ((line = in.readLine()) != null) 
-				{
-					AccessPoint ap = AccessPoint.Parse(line);
-					if (ap != null)
-					{
-						list.add(ap);
-					}
-				}
-			} 
-			catch (IOException e) 
-			{
-				e.printStackTrace();
-			}
-			finally
-			{
-				in.close();
-			}
-		} 
-		catch (FileNotFoundException e) 
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-		return list;
-    }
 }
