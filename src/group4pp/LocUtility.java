@@ -1,5 +1,6 @@
 package group4pp;
 
+import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 import org.pi4.locutil.*;
@@ -173,5 +174,47 @@ public class LocUtility
         }
         
         return Math.sqrt(result);
+    }
+
+    public static ArrayList<AccessPoint> parseAccessPointFile(File accessPointFile)
+    {
+    	ArrayList<AccessPoint> list = new ArrayList<AccessPoint>();
+		
+		BufferedReader in;
+		try 
+		{
+			in = new BufferedReader(new FileReader(accessPointFile));
+
+			String line;
+			
+			try 
+			{
+				while ((line = in.readLine()) != null) 
+				{
+					AccessPoint ap = AccessPoint.Parse(line);
+					if (ap != null)
+					{
+						list.add(ap);
+					}
+				}
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+			finally
+			{
+				in.close();
+			}
+		} 
+		catch (FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+		return list;
     }
 }

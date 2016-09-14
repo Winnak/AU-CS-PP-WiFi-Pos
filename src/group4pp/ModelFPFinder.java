@@ -23,11 +23,11 @@ public class ModelFPFinder
      */
     public static void main(String[] args)
     {
-        final String outputDir = "bin/output/model_FP_NN";
+        final String outputDir = "bin/output/model_FP_KNN";
         
         final String accessPointPath = "data/MU.AP__170012_1.positions";
     	File accessPointFile = new File(accessPointPath);
-    	ArrayList<AccessPoint> list = parseAccessPointFile(accessPointFile);
+    	ArrayList<AccessPoint> list = LocUtility.parseAccessPointFile(accessPointFile);
     	for (AccessPoint ap : list)
     	{
     		System.out.println(ap);
@@ -90,16 +90,20 @@ public class ModelFPFinder
                 	System.out.println(target);
             	}
             }
-            PrintWriter writerModel = new PrintWriter(outputDir, "UTF-8");
-            writerModel.println("estimated pos,true pos");
-            for (TraceEntry target : onlineTrace)
+            
+            for	(int k = 1; k < 6; k++)
             {
-                GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, newTraces, 1);
-                writerModel.print(estimate.toString());
-                writerModel.print(',');
-                writerModel.println(target.getGeoPosition());
+			    PrintWriter writerModel = new PrintWriter(outputDir + k + ".csv", "UTF-8");
+			    writerModel.println("estimated pos;true pos");
+	            for (TraceEntry target : onlineTrace)
+	            {
+	                GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, newTraces, k);
+	                writerModel.print(estimate.toString());
+	                writerModel.print(';');
+	                writerModel.println(target.getGeoPosition());
+	            }
+	            writerModel.close();
             }
-            writerModel.close();
             
             for	(int i = 0; i < ssD.size(); i++)
             {
@@ -119,46 +123,4 @@ public class ModelFPFinder
         }
     }
 
-    
-    public static ArrayList<AccessPoint> parseAccessPointFile(File accessPointFile)
-    {
-    	ArrayList<AccessPoint> list = new ArrayList<AccessPoint>();
-		
-		BufferedReader in;
-		try 
-		{
-			in = new BufferedReader(new FileReader(accessPointFile));
-
-			String line;
-			
-			try 
-			{
-				while ((line = in.readLine()) != null) 
-				{
-					AccessPoint ap = AccessPoint.Parse(line);
-					if (ap != null)
-					{
-						list.add(ap);
-					}
-				}
-			} 
-			catch (IOException e) 
-			{
-				e.printStackTrace();
-			}
-			finally
-			{
-				in.close();
-			}
-		} 
-		catch (FileNotFoundException e) 
-		{
-			e.printStackTrace();
-		}
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-		return list;
-    }
 }
