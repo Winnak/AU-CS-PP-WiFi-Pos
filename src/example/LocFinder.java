@@ -49,40 +49,69 @@ public class LocFinder
                                 
             // Generate traces from parsed files
             tg.generate();
+            List<TraceEntry> onlineTrace = tg.getOnline();
             
             // Michaels del
 
             List<TraceEntry> offlineTrace = tg.getOffline();
             List<TraceEntry> newTraces = new ArrayList<TraceEntry>();
             HashSet<GeoPosition> hsGP = new HashSet<GeoPosition>();
+            List<ArrayList<String>> ssD = new ArrayList<ArrayList<String>>();
             
             for (TraceEntry target : offlineTrace)
             {
             	if (hsGP.add(target.getGeoPosition()))
             	{
-            		TraceEntry te = TraceEntry.fromString("t=" + target.getTimestamp() +
+            		String traceEntryParseString = "t=" + target.getTimestamp() +
             				";pos=" + target.getGeoPosition().getX() + "," + target.getGeoPosition().getY() + "," + target.getGeoPosition().getZ() +
-            				";id=" + target.getId() +
-            				";" + list.get(0).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(0).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(1).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(1).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(2).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(2).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(3).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(3).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(4).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(4).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(5).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(5).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(6).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(6).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(7).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(7).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(8).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(8).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(9).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(9).position))) + ",2.412E9,3,-96" +
-            				";" + list.get(10).macAddress + "=" + (10 * 3.415 * Math.log10(target.getGeoPosition().distance(list.get(10).position))) + ",2.412E9,3,-96");
+            				";id=" + target.getId();
+            		double c = -33.77;
+            		double v = 3.415;
+            		
+            		for (int i = 0; i < list.size(); i++)
+            		{
+            			traceEntryParseString += ";" + list.get(i).macAddress + "=" + (-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ",2.412E9,3,-96";
+            			if ( ssD.size() < i + 1)
+            			{
+            				ssD.add(new ArrayList());
+                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
+            			}
+            			else
+            			{
+                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
+            			}
+            		}
+            		TraceEntry te = TraceEntry.fromString(traceEntryParseString);
             		newTraces.add(te);
-            		System.out.println(te);
-            		System.out.println(target);
+                	System.out.println(te);
+                	System.out.println(target);
             	}
+            }
+            
+            PrintWriter writerModel = new PrintWriter("model_FP_NN", "UTF-8");
+            writerModel.println("estimated pos,true pos");
+            for (TraceEntry target : onlineTrace)
+            {
+                GeoPosition estimate = findPositionOfTraceKNNSS(target, newTraces, 1);
+                writerModel.print(estimate.toString());
+                writerModel.print(',');
+                writerModel.println(target.getGeoPosition());
+            }
+            writerModel.close();
+            
+            for	(int i = 0; i < ssD.size(); i++)
+            {
+	            PrintWriter writerModelGraph = new PrintWriter("model_FP_NN" + (i + 1), "UTF-8");
+	            writerModelGraph.println("SS, d");
+	            for (String target : ssD.get(i))
+	            {
+	            	writerModelGraph.println(target);
+	            }
+	            writerModelGraph.close();
             }
             
             
             //Eriks del
-            List<TraceEntry> onlineTrace = tg.getOnline();
             
             if(ERROR_MODE) // <- #if where art thou.
             {
