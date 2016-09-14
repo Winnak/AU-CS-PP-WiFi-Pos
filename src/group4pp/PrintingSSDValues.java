@@ -17,7 +17,7 @@ import org.pi4.locutil.trace.*;
  * @author 
  *
  */
-public class PrintingDValues
+public class PrintingSSDValues
 {
     /**
      * @param args
@@ -25,6 +25,8 @@ public class PrintingDValues
     public static void main(String[] args)
     {
     	String accessPointPath = "data/MU.AP__170012_1.positions";
+    	
+    	// Construct parser for APs
     	File accessPointFile = new File(accessPointPath);
     	ArrayList<AccessPoint> list = LocUtility.parseAccessPointFile(accessPointFile);
     	ArrayList<ArrayList<String>> ssD = new ArrayList<ArrayList<String>>();
@@ -49,7 +51,8 @@ public class PrintingDValues
                                 
             // Generate traces from parsed files
             tg.generate();
-
+            
+            // adds signal strength and distance between online entries and APs
             List<TraceEntry> onlineTrace = tg.getOnline();
             for (TraceEntry entry : onlineTrace) 
             {
@@ -85,9 +88,10 @@ public class PrintingDValues
 				}
 			}
             
+            // writes to file
             for	(int i = 0; i < ssD.size(); i++)
             {
-	            PrintWriter writerModelGraph = new PrintWriter("WHAT_FP_NN" + (i + 1), "UTF-8");
+	            PrintWriter writerModelGraph = new PrintWriter("SSD_FP_NN" + (i + 1), "UTF-8");
 	            writerModelGraph.println("SS, d");
 	            for (String target : ssD.get(i))
 	            {
