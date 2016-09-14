@@ -17,8 +17,10 @@ public class EmpericalFPFinder
 
     public static void main(String[] args)
     {
-        String offlinePath = "data/MU.1.5meters.offline.trace";
-        String onlinePath = "data/MU.1.5meters.online.trace";
+        final String outputDir = "bin/output/empirical_FP_NN";
+        
+        final String offlinePath = "data/MU.1.5meters.offline.trace";
+        final String onlinePath = "data/MU.1.5meters.online.trace";
 
         // Construct parsers
         File offlineFile = new File(offlinePath);
@@ -31,8 +33,8 @@ public class EmpericalFPFinder
         TraceGenerator tg;
         try
         {
-            int offlineSize = 25;
-            int onlineSize = 5;
+            final int offlineSize = 25;
+            final int onlineSize = 5;
             tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
                                 
             // Generate traces from parsed files
@@ -45,7 +47,7 @@ public class EmpericalFPFinder
             {
                 int total = 0;
                 int errors = 0;
-                double errorMargin = 2;
+                final double errorMargin = 2;
                 
                 double averageLength = 0;
                 
@@ -70,14 +72,14 @@ public class EmpericalFPFinder
             }
             else
             {                
-                PrintWriter writer = new PrintWriter("empirical_FP_NN", "UTF-8");
-                writer.println("estimated pos,true pos");
+                PrintWriter writer = new PrintWriter(outputDir, "UTF-8");
+                writer.println("estimated pos;true pos");
                 
                 for (TraceEntry target : onlineTrace)
                 {
                     GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, offlineTrace, 1);
                     writer.print(estimate.toString());
-                    writer.print(',');
+                    writer.print(';');
                     writer.println(target.getGeoPosition());
                 }
                 writer.close();

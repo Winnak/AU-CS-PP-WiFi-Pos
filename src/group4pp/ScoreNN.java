@@ -9,8 +9,12 @@ public class ScoreNN
 
     public static void main(String[] args)
     {
-        // TODO Auto-generated method stub
-
+        if (args.length != 1)
+        {
+            System.out.println("No file specified (note: piping not implemented) Example:");
+            System.out.println("\"ScoreNN emperical_FP_NN\"");
+            
+            return;
+        }
     }
-
 }
