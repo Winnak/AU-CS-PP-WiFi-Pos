@@ -17,10 +17,10 @@ public class EmpericalFPFinder
 
     public static void main(String[] args)
     {
-        String outputDir = "bin/output/empirical_FP_NN";
+        final String outputDir = "bin/output/empirical_FP_NN";
         
-        String offlinePath = "data/MU.1.5meters.offline.trace";
-        String onlinePath = "data/MU.1.5meters.online.trace";
+        final String offlinePath = "data/MU.1.5meters.offline.trace";
+        final String onlinePath = "data/MU.1.5meters.online.trace";
 
         // Construct parsers
         File offlineFile = new File(offlinePath);
@@ -33,8 +33,8 @@ public class EmpericalFPFinder
         TraceGenerator tg;
         try
         {
-            int offlineSize = 25;
-            int onlineSize = 5;
+            final int offlineSize = 25;
+            final int onlineSize = 5;
             tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
                                 
             // Generate traces from parsed files
@@ -47,7 +47,7 @@ public class EmpericalFPFinder
             {
                 int total = 0;
                 int errors = 0;
-                double errorMargin = 2;
+                final double errorMargin = 2;
                 
                 double averageLength = 0;
                 

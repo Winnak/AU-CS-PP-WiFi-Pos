@@ -23,9 +23,9 @@ public class ModelFPFinder
      */
     public static void main(String[] args)
     {
-        String outputDir = "bin/output/model_FP_NN";
+        final String outputDir = "bin/output/model_FP_NN";
         
-    	String accessPointPath = "data/MU.AP__170012_1.positions";
+        final String accessPointPath = "data/MU.AP__170012_1.positions";
     	File accessPointFile = new File(accessPointPath);
     	ArrayList<AccessPoint> list = parseAccessPointFile(accessPointFile);
     	for (AccessPoint ap : list)
@@ -33,8 +33,8 @@ public class ModelFPFinder
     		System.out.println(ap);
     	}
     	
-        String offlinePath = "data/MU.1.5meters.offline.trace";
-        String onlinePath = "data/MU.1.5meters.online.trace";
+    	final String offlinePath = "data/MU.1.5meters.offline.trace";
+    	final String onlinePath = "data/MU.1.5meters.online.trace";
 
         // Construct parsers
         File offlineFile = new File(offlinePath);
@@ -47,8 +47,8 @@ public class ModelFPFinder
         TraceGenerator tg;
         try
         {
-            int offlineSize = 25;
-            int onlineSize = 5;
+            final int offlineSize = 25;
+            final int onlineSize = 5;
             tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
                                 
             // Generate traces from parsed files
@@ -68,8 +68,8 @@ public class ModelFPFinder
             		String traceEntryParseString = "t=" + target.getTimestamp() +
             				";pos=" + target.getGeoPosition().getX() + "," + target.getGeoPosition().getY() + "," + target.getGeoPosition().getZ() +
             				";id=" + target.getId();
-            		double c = -33.77;
-            		double v = 3.415;
+            		final double c = -33.77;
+            		final double v = 3.415;
             		
             		for (int i = 0; i < list.size(); i++)
             		{
