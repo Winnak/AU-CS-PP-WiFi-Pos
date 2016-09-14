@@ -25,13 +25,14 @@ public class ModelFPFinder
     {
         final String outputDir = "bin/output/model_FP_KNN";
         
+        // Construct parser for APs
         final String accessPointPath = "data/MU.AP__170012_1.positions";
     	File accessPointFile = new File(accessPointPath);
     	ArrayList<AccessPoint> list = LocUtility.parseAccessPointFile(accessPointFile);
-    	for (AccessPoint ap : list)
+    	/*for (AccessPoint ap : list)
     	{
     		System.out.println(ap);
-    	}
+    	}*/
     	
     	final String offlinePath = "data/MU.1.5meters.offline.trace";
     	final String onlinePath = "data/MU.1.5meters.online.trace";
@@ -52,11 +53,13 @@ public class ModelFPFinder
 
             List<TraceEntry> newTraces = new ArrayList<TraceEntry>();
 
-            for	(int k = 1; k < 6; k++)
+            // k is the number of nearest neighbors, for each k a file will be created
+            for	(int k = 1; k <= 5; k++)
             {
             	
 			    PrintWriter writerModel = new PrintWriter(outputDir + k + ".csv", "UTF-8");
-	            for (int kValues = 0; kValues < 10; kValues++)
+			    // number of times we reset the random entries, this will create a longer file
+	            for (int kIterations = 1; kIterations <= 10; kIterations++)
 	            {
 		            tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
 				    
@@ -67,8 +70,10 @@ public class ModelFPFinder
 		
 		            List<TraceEntry> offlineTrace = tg.getOffline();
 		            HashSet<GeoPosition> hsGP = new HashSet<GeoPosition>();
+		            // A list for signal strength and distance og calculated points
 		            //List<ArrayList<String>> ssD = new ArrayList<ArrayList<String>>();
 		            
+		            // calculates new entries using a model
 		            for (TraceEntry target : offlineTrace)
 		            {
 		            	if (hsGP.add(target.getGeoPosition()))
@@ -82,6 +87,7 @@ public class ModelFPFinder
 		            		for (int i = 0; i < list.size(); i++)
 		            		{
 		            			traceEntryParseString += ";" + list.get(i).macAddress + "=" + (-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ",2.412E9,3,-96";
+		            			// this comment is to ideal signal strength and distance to calculated points
 		            			/*if ( ssD.size() < i + 1)
 		            			{
 		            				ssD.add(new ArrayList());
@@ -94,10 +100,9 @@ public class ModelFPFinder
 		            		}
 		            		TraceEntry te = TraceEntry.fromString(traceEntryParseString);
 		            		newTraces.add(te);
-		                	/*System.out.println(te);
-		                	System.out.println(target);*/
 		            	}
 		            }
+			        // makes file with estimated position and true position og online points  
 				    writerModel.println("estimated pos;true pos");
 		            for (TraceEntry target : onlineTrace)
 		            {
@@ -108,6 +113,8 @@ public class ModelFPFinder
 		            }
 		            writerModel.close();
 	            }
+	            
+	        // makes file with signal strength and distance for calculated points    
             /*for	(int i = 0; i < ssD.size(); i++)
             {
 	            PrintWriter writerModelGraph = new PrintWriter(outputDir + (i + 1), "UTF-8");
