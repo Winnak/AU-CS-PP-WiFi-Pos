@@ -1,4 +1,4 @@
-package example;
+package group4pp;
 
 import java.io.*;
 import java.util.*;
@@ -8,12 +8,10 @@ import org.pi4.locutil.io.*;
 import org.pi4.locutil.trace.*;
 
 /**
- * @author hoyjor
+ * @author Hoyjor
  */
-public class LocFinder
+public class LocUtility
 {
-    final static boolean ERROR_MODE = false;
-
     /**
      * Execute example
      * 
@@ -87,7 +85,6 @@ public class LocFinder
                 	System.out.println(target);
             	}
             }
-            
             PrintWriter writerModel = new PrintWriter("model_FP_NN", "UTF-8");
             writerModel.println("estimated pos,true pos");
             for (TraceEntry target : onlineTrace)
@@ -110,48 +107,6 @@ public class LocFinder
 	            writerModelGraph.close();
             }
             
-            
-            //Eriks del
-            
-            if(ERROR_MODE) // <- #if where art thou.
-            {
-                int total = 0;
-                int errors = 0;
-                double errorMargin = 2;
-                
-                double averageLength = 0;
-                
-                for (TraceEntry target : onlineTrace)
-                {
-                    GeoPosition estimate = findPositionOfTraceKNNSS(target, tg.getOffline(), 3);
-                    double oDist = calculateError(target.getGeoPosition(), estimate);
-                    
-                    averageLength += oDist;
-                    
-                    if (oDist > errorMargin)
-                    {
-                        errors++;
-                    }
-                    
-                    total++;
-                }
-                averageLength /= total;
-                
-                System.out.println(averageLength);
-                System.out.println(errors + "/" + total);    
-            }
-            
-            PrintWriter writer = new PrintWriter("empirical_FP_NN", "UTF-8");
-            writer.println("estimated pos,true pos");
-            
-            for (TraceEntry target : onlineTrace)
-            {
-                GeoPosition estimate = findPositionOfTraceKNNSS(target, tg.getOffline(), 1);
-                writer.print(estimate.toString());
-                writer.print(',');
-                writer.println(target.getGeoPosition());
-            }
-            writer.close();
         } 
         catch (NumberFormatException e)
         {
@@ -210,11 +165,12 @@ public class LocFinder
     }
 
     /**
+     * @author Hoyjor
      * @param tg
      * @param targetEntry
      * @throws Exception 
      */
-    private static GeoPosition findPositionOfTraceKNNSS(TraceEntry targetEntry, List<TraceEntry> offlineTraces, int kVal) throws Exception
+    public static GeoPosition findPositionOfTraceKNNSS(TraceEntry targetEntry, List<TraceEntry> offlineTraces, int kVal) throws Exception
     {
         if (offlineTraces == null)
         {
@@ -256,6 +212,7 @@ public class LocFinder
     }
 
     /**
+     * @author Hoyjor
      * @param nearby
      * @return
      */
@@ -315,11 +272,6 @@ public class LocFinder
             }
         }
         return nearby;
-    }
-
-    private static double calculateError(GeoPosition groundTruth, GeoPosition estimate)
-    {
-        return groundTruth.distance(estimate);
     }
 
     private static double getEuclidAveragePosition(SignalStrengthSamples targetSignalStrengths, List<SignalStrengthSamples> values)
