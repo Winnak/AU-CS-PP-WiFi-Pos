@@ -49,63 +49,66 @@ public class ModelFPFinder
         {
             final int offlineSize = 25;
             final int onlineSize = 5;
-            tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
-                                
-            // Generate traces from parsed files
-            tg.generate();
 
-            List<TraceEntry> onlineTrace = tg.getOnline();
-
-            List<TraceEntry> offlineTrace = tg.getOffline();
             List<TraceEntry> newTraces = new ArrayList<TraceEntry>();
-            HashSet<GeoPosition> hsGP = new HashSet<GeoPosition>();
-            List<ArrayList<String>> ssD = new ArrayList<ArrayList<String>>();
-            
-            for (TraceEntry target : offlineTrace)
-            {
-            	if (hsGP.add(target.getGeoPosition()))
-            	{
-            		String traceEntryParseString = "t=" + target.getTimestamp() +
-            				";pos=" + target.getGeoPosition().getX() + "," + target.getGeoPosition().getY() + "," + target.getGeoPosition().getZ() +
-            				";id=" + target.getId();
-            		final double c = -33.77;
-            		final double v = 3.415;
-            		
-            		for (int i = 0; i < list.size(); i++)
-            		{
-            			traceEntryParseString += ";" + list.get(i).macAddress + "=" + (-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ",2.412E9,3,-96";
-            			if ( ssD.size() < i + 1)
-            			{
-            				ssD.add(new ArrayList());
-                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
-            			}
-            			else
-            			{
-                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
-            			}
-            		}
-            		TraceEntry te = TraceEntry.fromString(traceEntryParseString);
-            		newTraces.add(te);
-                	System.out.println(te);
-                	System.out.println(target);
-            	}
-            }
-            
+
             for	(int k = 1; k < 6; k++)
             {
+            	
 			    PrintWriter writerModel = new PrintWriter(outputDir + k + ".csv", "UTF-8");
-			    writerModel.println("estimated pos;true pos");
-	            for (TraceEntry target : onlineTrace)
+	            for (int kValues = 0; kValues < 10; kValues++)
 	            {
-	                GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, newTraces, k);
-	                writerModel.print(estimate.toString());
-	                writerModel.print(';');
-	                writerModel.println(target.getGeoPosition());
+		            tg = new TraceGenerator(offlineParser, onlineParser, offlineSize, onlineSize);
+				    
+		            // Generate traces from parsed files
+		            tg.generate();
+		
+		            List<TraceEntry> onlineTrace = tg.getOnline();
+		
+		            List<TraceEntry> offlineTrace = tg.getOffline();
+		            HashSet<GeoPosition> hsGP = new HashSet<GeoPosition>();
+		            //List<ArrayList<String>> ssD = new ArrayList<ArrayList<String>>();
+		            
+		            for (TraceEntry target : offlineTrace)
+		            {
+		            	if (hsGP.add(target.getGeoPosition()))
+		            	{
+		            		String traceEntryParseString = "t=" + target.getTimestamp() +
+		            				";pos=" + target.getGeoPosition().getX() + "," + target.getGeoPosition().getY() + "," + target.getGeoPosition().getZ() +
+		            				";id=" + target.getId();
+		            		final double c = -33.77;
+		            		final double v = 3.415;
+		            		
+		            		for (int i = 0; i < list.size(); i++)
+		            		{
+		            			traceEntryParseString += ";" + list.get(i).macAddress + "=" + (-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ",2.412E9,3,-96";
+		            			/*if ( ssD.size() < i + 1)
+		            			{
+		            				ssD.add(new ArrayList());
+		                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
+		            			}
+		            			else
+		            			{
+		                			ssD.get(i).add((-10 * v * Math.log10(target.getGeoPosition().distance(list.get(i).position))+c) + ", " + target.getGeoPosition().distance(list.get(i).position));
+		            			}*/
+		            		}
+		            		TraceEntry te = TraceEntry.fromString(traceEntryParseString);
+		            		newTraces.add(te);
+		                	/*System.out.println(te);
+		                	System.out.println(target);*/
+		            	}
+		            }
+				    writerModel.println("estimated pos;true pos");
+		            for (TraceEntry target : onlineTrace)
+		            {
+		                GeoPosition estimate = LocUtility.findPositionOfTraceKNNSS(target, newTraces, k);
+		                writerModel.print(estimate.toString());
+		                writerModel.print(';');
+		                writerModel.println(target.getGeoPosition());
+		            }
+		            writerModel.close();
 	            }
-	            writerModel.close();
-            }
-            
-            for	(int i = 0; i < ssD.size(); i++)
+            /*for	(int i = 0; i < ssD.size(); i++)
             {
 	            PrintWriter writerModelGraph = new PrintWriter(outputDir + (i + 1), "UTF-8");
 	            writerModelGraph.println("SS, d");
@@ -114,8 +117,9 @@ public class ModelFPFinder
 	            	writerModelGraph.println(target);
 	            }
 	            writerModelGraph.close();
-            }
+            }*/
             
+            }
         }
         catch (Exception e)
         {
